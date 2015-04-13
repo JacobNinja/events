@@ -10,10 +10,10 @@
   (with-meta (merge state data) ; Add timestamp to user data
     {:timestamp timestamp}))
 
-(defn- merge-user-state [state {:keys [user-id data timestamp]}]
-  (when (> timestamp (get-timestamp (state user-id)))
+(defn- merge-user-state [state {:keys [user_id data timestamp]}]
+  (when (> timestamp (get-timestamp (state user_id)))
     (update-in state
-               [user-id]
+               [user_id]
                (partial timestamped-merge timestamp)
                data)))
 

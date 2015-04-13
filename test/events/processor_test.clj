@@ -6,7 +6,7 @@
   {
    :id "c52543d8-da03-11e4-8e29-c5dc2fe5941b",
    :type "attributes"
-   :user-id "2352"
+   :user_id "2352"
    :data {"name" "Bill", "email" "bill@gmail.com"}
    :timestamp 1428067050
    })

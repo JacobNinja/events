@@ -4,23 +4,26 @@
   (get (meta user-state) :timestamp 0))
 
 (defn- duplicated-event? [state event-data]
-  (get-in (meta @state) [:dups (:id event-data)]))
+  (get-in (meta @state) [:dups (event-data "id")]))
 
 (defn- timestamped-merge [timestamp state data]
   (with-meta (merge state data) ; Add timestamp to user data
     {:timestamp timestamp}))
 
-(defn- merge-user-state [state {:keys [user_id data timestamp]}]
-  (when (> timestamp (get-timestamp (state user_id)))
-    (update-in state
-               [user_id]
-               (partial timestamped-merge timestamp)
-               data)))
+(defn- merge-user-state [state event-data]
+  (let [user-id (event-data "user_id")
+        timestamp (event-data "timestamp")
+        data (event-data "data")]
+    (when (> timestamp (get-timestamp (state user-id)))
+      (update-in state
+                 [user-id]
+                 (partial timestamped-merge timestamp)
+                 data))))
 
 (defn- merge-state [state event-data]
   (with-meta (or (merge-user-state state event-data)
                  state)
-    (update-in (meta state) [:dups] conj (:id event-data)))) ; Add event id to dups set
+    (update-in (meta state) [:dups] conj (event-data "id")))) ; Add event id to dups set
 
 (defn- process [event-data state]
   (when-not (duplicated-event? state event-data)

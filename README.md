@@ -1,14 +1,15 @@
 # events
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure library designed to process and de-duplicate events
 
-## Usage
+# Running
 
-FIXME
+## Requirements
+* Copy `files` into `resources/`
+* Leiningen (http://leiningen.org/) (can be installed via brew)
 
-## License
+## Tests
+`lein test`
 
-Copyright © 2015 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+## Process file (run the main function)
+`lein trampoline run resources/files/messages.small.out`

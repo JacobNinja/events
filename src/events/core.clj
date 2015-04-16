@@ -1,6 +1,7 @@
 (ns events.core
   (:require [events.processor :refer [make-processor]]
-            [clojure.data.json :as json]))
+            [clojure.data.json :as json]
+            [clojure.string :refer [join]]))
 
 (def progress-file "progress.out")
 
@@ -23,6 +24,14 @@
       {:dups #{}
        :n 0})))
 
+(defn serialize-results [state]
+  (with-open [out (clojure.java.io/writer "result.out")]
+    (doseq [[user-id data] @state]
+      (.write out (str (join (interpose ","
+                                        (cons user-id
+                                              (map (fn [[k v]] (str k "=" v)) data))))
+                       \newline)))))
+
 (defn process-events [event-stream state]
   (let [processor (make-processor state)]
     (doseq [event event-stream]
@@ -36,5 +45,6 @@
       (process-events (drop (:n (meta @state))
                             (read-json in))
                       state))
+    (serialize-results state)
     (swap! state with-meta {:complete true})
     (clojure.java.io/delete-file "progress.out" true)))

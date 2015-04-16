@@ -16,16 +16,21 @@
          {"id" (str (java.util.UUID/randomUUID))}
          event-data))
 
+(defn- empty-state []
+  (atom (with-meta {}
+          {:dups #{}
+           :n 1})))
+
 (deftest process-test
   (testing "stores event data by user_id"
-    (let [state (atom {})
+    (let [state (empty-state)
           process-event (make-processor state)]
       (process-event event)
       (is (= @state
              {"2352" {"name" "Bill", "email" "bill@gmail.com"}}))))
 
   (testing "stores data with latest timestamp"
-    (let [state (atom {})
+    (let [state (empty-state)
           process-event (make-processor state)
           early-event (new-event {"data" {"name" "Graham"}
                                   "timestamp" (dec (event "timestamp"))})
@@ -43,7 +48,7 @@
                             (late-event "data"))}))))
 
   (testing "de-dupes by id"
-    (let [state (atom {})
+    (let [state (empty-state)
           process-event (make-processor state)
           duped-event (merge event {"data" {"foo" "bar"}
                                     "timestamp" (inc (event "timestamp"))})]

@@ -3,35 +3,39 @@
 (defn- get-timestamp [user-state]
   (get (meta user-state) :timestamp 0))
 
-(defn- duplicated-event? [state event-data]
-  (get-in (meta @state) [:dups (event-data "id")]))
+(defn- duplicated-event? [state event]
+  (get-in (meta @state) [:dups (event "id")]))
+
+(defn- add-to-dups [state event]
+  (update-in (meta state)
+             [:dups]
+             conj (event "id")))
 
 (defn- timestamped-merge [timestamp state data]
   (with-meta (merge state data) ; Add timestamp to user data
     {:timestamp timestamp}))
 
-(defn- merge-user-state [state event-data]
-  (let [user-id (event-data "user_id")
-        timestamp (event-data "timestamp")
-        data (event-data "data")]
+(defn- merge-user-state [state event]
+  (let [user-id (event "user_id")
+        timestamp (event "timestamp")
+        data (event "data")]
     (when (> timestamp (get-timestamp (state user-id)))
       (update-in state
                  [user-id]
                  (partial timestamped-merge timestamp)
                  data))))
 
-(defn- merge-state [state event-data]
-  (with-meta (or (merge-user-state state event-data)
+(defn- merge-state [state event]
+  (with-meta (or (merge-user-state state event)
                  state)
-    (update-in (meta state) [:dups] conj (event-data "id")))) ; Add event id to dups set
+    (update-in (add-to-dups state event)
+               [:n]
+               inc)))
 
-(defn- process [event-data state]
-  (when-not (duplicated-event? state event-data)
-    (swap! state merge-state event-data)))
+(defn- process [event state]
+  (when-not (duplicated-event? state event)
+    (swap! state merge-state event)))
 
-(defn make-processor
-  ([state] (make-processor state #{})) ; Dups default to empty set
-  ([state dups]
-   (swap! state with-meta {:dups dups}) ; Associate dups meta data
-   (fn [event]
-     (process event state))))
+(defn make-processor [state]
+  (fn [event]
+    (process event state)))
